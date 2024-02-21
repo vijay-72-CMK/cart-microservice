@@ -22,4 +22,9 @@ public class CartItem {
     @Column(nullable = false)
     private Integer quantity;
 
+    @ManyToOne
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
+
 }

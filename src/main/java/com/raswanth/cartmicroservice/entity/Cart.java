@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "carts")
-class Cart {
+public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
