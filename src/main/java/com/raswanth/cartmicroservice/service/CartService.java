@@ -7,6 +7,7 @@ import com.raswanth.cartmicroservice.exception.GeneralInternalException;
 import com.raswanth.cartmicroservice.repositories.CartItemRepository;
 import com.raswanth.cartmicroservice.repositories.CartRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +31,8 @@ public class CartService {
 
     public void addToCart(CartItemBodyDto cartItemBodyDto) {
         try {
-            Optional<Cart> cartExists = cartRepository.findByUserId(cartItemBodyDto.getUserId());
-            Cart cart;
-            cart = cartExists.orElseGet(() -> createNewCart(cartItemBodyDto.getUserId()));
+            Cart cart = cartRepository.findByUserId(cartItemBodyDto.getUserId())
+                    .orElseGet(() -> createNewCart(cartItemBodyDto.getUserId()));
 
             Optional<CartItem> existingCartItem = cartItemRepository.findByuserIdAndproductId(cartItemBodyDto.getUserId(),cartItemBodyDto.getProductId());
             if (existingCartItem.isPresent()) {
@@ -58,4 +58,12 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+    public Cart viewCart(Integer userId) {
+        try {
+            return cartRepository.findByUserId(userId)
+                    .orElseGet(() -> createNewCart(userId));
+        } catch (DataAccessException e) {
+            throw new GeneralInternalException("Database error while viewing cart");
+        }
+    }
 }
