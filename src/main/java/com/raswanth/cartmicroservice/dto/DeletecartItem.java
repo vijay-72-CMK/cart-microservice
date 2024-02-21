@@ -7,12 +7,13 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
-public class AddCartItemBodyDto {
-    @NotBlank(message = "product Id cannot be null")
-    private String productId;
-    @NotNull(message = "quantity cannot be null")
-    @Positive(message = "quantity must be positive")
-    private Integer quantity;
+public class DeletecartItem {
+    @NotNull(message = "quantity to remove cannot be null")
+    @Positive(message = "quantity to remove must be positive")
+    Integer quantityToRemove;
+
+    @NotBlank(message = "product id cannot be null")
+    String productId;
 
     @NotNull(message = "userId cannot be null")
     @Min(1)

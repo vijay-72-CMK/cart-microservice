@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -44,6 +45,7 @@ public class BaseExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ProblemDetail handleConstraintViolation(
             ConstraintViolationException ex) {
+        log.error("ConstraintViolationException", ex);
 
         List<Map<String, String>> invalidPathVariables = ex.getConstraintViolations().stream()
                 .map(violation -> Map.of(
@@ -62,9 +64,24 @@ public class BaseExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
+    protected ResponseEntity<Object> handleMissingPathVariable(MissingPathVariableException ex, HttpHeaders headers,
+                                                               HttpStatusCode status, WebRequest request) {
+        log.error("missing path variable",ex);
+        // Create the ProblemDetail object
+        String error = ex.getVariableName() + " parameter is missing";
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, "Please add path variable");
+        problemDetail.setTitle("Missing path variable");
+        problemDetail.setType(URI.create("http://localhost:8080/errors/badRequest"));
+        problemDetail.setProperty("missing-path-params", error);
+        problemDetail.setProperty("timestamp", Instant.now());
+        return handleExceptionInternal(ex, problemDetail, headers, status, request);
+    }
+
+    @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers,
             HttpStatusCode status, WebRequest request) {
+        log.error("MethodArgumentNotValidException", ex);
 
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
 

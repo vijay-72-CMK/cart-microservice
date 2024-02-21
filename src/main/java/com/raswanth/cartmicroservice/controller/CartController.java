@@ -1,6 +1,7 @@
 package com.raswanth.cartmicroservice.controller;
 
-import com.raswanth.cartmicroservice.dto.CartItemBodyDto;
+import com.raswanth.cartmicroservice.dto.AddCartItemBodyDto;
+import com.raswanth.cartmicroservice.dto.DeletecartItem;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.service.CartService;
 import jakarta.validation.Valid;
@@ -20,13 +21,19 @@ public class CartController {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody CartItemBodyDto cartItemBodyDto) {
-        cartService.addToCart(cartItemBodyDto);
+    public ResponseEntity<String> registerUser(@Valid @RequestBody AddCartItemBodyDto addCartItemBodyDto) {
+        cartService.addToCart(addCartItemBodyDto);
         return ResponseEntity.ok("Added product to cart");
     }
 
     @GetMapping("/view-cart/{userId}")
     public Cart viewCart(@Valid @PathVariable Integer userId) {
         return cartService.viewCart(userId);
+    }
+
+    @DeleteMapping("/delete-item")
+    public ResponseEntity<String> deleteCartItem(@Valid @RequestBody DeletecartItem deleteCartItemDTO) {
+        cartService.deleteCartItem(deleteCartItemDTO);
+        return ResponseEntity.ok("Deleted successfully!");
     }
 }
