@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 
 @RestController
 @RequestMapping("/api/cart")
@@ -21,8 +23,8 @@ public class CartController {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody AddCartItemBodyDto addCartItemBodyDto) {
-        cartService.addToCart(addCartItemBodyDto);
+    public ResponseEntity<String> registerUser(@Valid @RequestBody AddCartItemBodyDto addCartItemBodyDto, Principal principal) {
+        cartService.addToCart(addCartItemBodyDto, principal);
         return ResponseEntity.ok("Added product to cart");
     }
 

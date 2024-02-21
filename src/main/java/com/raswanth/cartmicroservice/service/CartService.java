@@ -10,8 +10,11 @@ import com.raswanth.cartmicroservice.repositories.CartRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -30,12 +33,13 @@ public class CartService {
         this.cartItemRepository = cartItemRepository;
     }
 
-    public void addToCart(AddCartItemBodyDto addCartItemBodyDto) {
+    public void addToCart(AddCartItemBodyDto addCartItemBodyDto, Principal signedInUser) {
         try {
-            Cart cart = cartRepository.findByUserId(addCartItemBodyDto.getUserId())
-                    .orElseGet(() -> createNewCart(addCartItemBodyDto.getUserId()));
+            Integer userID = Integer.valueOf(signedInUser.getName());
+            Cart cart = cartRepository.findByUserId(userID)
+                    .orElseGet(() -> createNewCart(userID));
 
-            Optional<CartItem> existingCartItem = cartItemRepository.findByuserIdAndproductId(addCartItemBodyDto.getUserId(), addCartItemBodyDto.getProductId());
+            Optional<CartItem> existingCartItem = cartItemRepository.findByuserIdAndproductId(userID, addCartItemBodyDto.getProductId());
             if (existingCartItem.isPresent()) {
                 CartItem curCartItem = existingCartItem.get();
                 curCartItem.setQuantity(addCartItemBodyDto.getQuantity());

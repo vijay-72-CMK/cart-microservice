@@ -13,8 +13,4 @@ public class AddCartItemBodyDto {
     @NotNull(message = "quantity cannot be null")
     @Positive(message = "quantity must be positive")
     private Integer quantity;
-
-    @NotNull(message = "userId cannot be null")
-    @Min(1)
-    Integer userId;
 }
