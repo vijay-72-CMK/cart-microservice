@@ -22,10 +22,10 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @PostMapping("/add-product")
-    public ResponseEntity<String> updateProduct(@Valid @RequestBody UpdateCartDto updateCartDto, Principal principal) {
+    @PostMapping("/update-cart")
+    public ResponseEntity<String> updateCart(@Valid @RequestBody UpdateCartDto updateCartDto, Principal principal) {
         cartService.updateCart(updateCartDto, principal);
-        return ResponseEntity.ok("Added product to cart");
+        return ResponseEntity.ok("Updated cart successfully!");
     }
 
     @GetMapping("/view-cart")

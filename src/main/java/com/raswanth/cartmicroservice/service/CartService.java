@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -54,7 +55,8 @@ public class CartService {
             }
 
             int availableQuantity = product.getAvailableQuantity();
-            if (availableQuantity < updateCartDto.getUpdatedQuantity()) {
+            Integer updatedQuantity = updateCartDto.getUpdatedQuantity();
+            if (availableQuantity < updatedQuantity) {
                 throw new GeneralInternalException("Updated quantity cannot be greater than " + availableQuantity, HttpStatus.BAD_REQUEST);
             }
 
@@ -64,12 +66,26 @@ public class CartService {
             Optional<CartItem> existingCartItem = cartItemRepository.
                     findByuserIdAndproductId(userID, updateCartDto.getProductId());
 
+
             if (existingCartItem.isPresent()) {
                 CartItem curCartItem = existingCartItem.get();
-                curCartItem.setQuantity(updateCartDto.getUpdatedQuantity());
+                if (Objects.equals(curCartItem.getQuantity(), updatedQuantity)) {
+                    throw new GeneralInternalException("Updated quantity and previous quantity are same in update cart",
+                            HttpStatus.BAD_REQUEST);
+                }
+                curCartItem.setQuantity(updatedQuantity);
+                if (updatedQuantity == 0) {
+                    cartItemRepository.deleteById(curCartItem.getId());
+                } else {
+                    curCartItem.setQuantity(updatedQuantity);
+                }
             } else {
+                if (updatedQuantity == 0) {
+                    throw new GeneralInternalException("Cannot add product with id " + updateCartDto.getProductId() +
+                            " to cart whose quantity is zero", HttpStatus.BAD_REQUEST);
+                }
                 CartItem cartItem = new CartItem();
-                cartItem.setQuantity(updateCartDto.getUpdatedQuantity());
+                cartItem.setQuantity(updatedQuantity);
                 cartItem.setProductId(updateCartDto.getProductId());
                 cart.getCartItems().add(cartItem);
             }
