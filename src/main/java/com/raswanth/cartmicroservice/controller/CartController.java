@@ -28,9 +28,9 @@ public class CartController {
         return ResponseEntity.ok("Added product to cart");
     }
 
-    @GetMapping("/view-cart/{userId}")
-    public Cart viewCart(@Valid @PathVariable Integer userId) {
-        return cartService.viewCart(userId);
+    @GetMapping("/view-cart")
+    public Cart viewCart(Principal signedInUser) {
+        return cartService.viewCart(signedInUser);
     }
 
     @DeleteMapping("/delete-item")

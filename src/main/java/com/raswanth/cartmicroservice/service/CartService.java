@@ -67,8 +67,9 @@ public class CartService {
         }
     }
 
-    public Cart viewCart(Integer userId) {
+    public Cart viewCart(Principal singedInUser) {
         try {
+            Integer userId = Integer.valueOf(singedInUser.getName());
             return cartRepository.findByUserId(userId)
                     .orElseGet(() -> createNewCart(userId));
         } catch (DataAccessException e) {
