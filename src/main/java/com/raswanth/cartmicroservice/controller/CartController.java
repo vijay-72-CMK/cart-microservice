@@ -1,6 +1,6 @@
 package com.raswanth.cartmicroservice.controller;
 
-import com.raswanth.cartmicroservice.dto.AddCartItemBodyDto;
+import com.raswanth.cartmicroservice.dto.UpdateCartDto;
 import com.raswanth.cartmicroservice.dto.DeletecartItem;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.service.CartService;
@@ -23,8 +23,8 @@ public class CartController {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody AddCartItemBodyDto addCartItemBodyDto, Principal principal) {
-        cartService.addToCart(addCartItemBodyDto, principal);
+    public ResponseEntity<String> updateProduct(@Valid @RequestBody UpdateCartDto updateCartDto, Principal principal) {
+        cartService.updateCart(updateCartDto, principal);
         return ResponseEntity.ok("Added product to cart");
     }
 
