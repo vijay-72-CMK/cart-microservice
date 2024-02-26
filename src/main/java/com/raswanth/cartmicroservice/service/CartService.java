@@ -1,7 +1,6 @@
 package com.raswanth.cartmicroservice.service;
 
 import com.raswanth.cartmicroservice.dto.UpdateCartDto;
-import com.raswanth.cartmicroservice.dto.DeletecartItem;
 import com.raswanth.cartmicroservice.dto.ProductDto;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.entity.CartItem;
@@ -114,29 +113,6 @@ public class CartService {
                     .orElseGet(() -> createNewCart(userId));
         } catch (DataAccessException e) {
             throw new GeneralInternalException("Database error while viewing cart");
-        }
-    }
-
-    public void deleteCartItem(DeletecartItem req) {
-        try {
-            Integer userId = req.getUserId();
-            Cart cart = cartRepository.findByUserId(userId)
-                    .orElseGet(() -> createNewCart(userId));
-            CartItem existingCartItem = cartItemRepository.findByuserIdAndproductId(userId, req.getProductId())
-                    .orElseThrow(() -> new GeneralInternalException("Cannot delete as product id does not exist", HttpStatus.BAD_REQUEST));
-
-            if (existingCartItem.getQuantity() < req.getQuantityToRemove()) {
-                throw new GeneralInternalException("Cannot delete more than " + existingCartItem.getQuantity() + " items", HttpStatus.BAD_REQUEST);
-            }
-            int newQuantity = existingCartItem.getQuantity() - req.getQuantityToRemove();
-            if (newQuantity == 0) {
-                cartItemRepository.deleteById(existingCartItem.getId());
-            } else {
-                existingCartItem.setQuantity(newQuantity);
-            }
-            cartRepository.save(cart);
-        } catch (DataAccessException e) {
-            throw new GeneralInternalException("Database error while deleting cartItem of user" + req.getUserId());
         }
     }
 }

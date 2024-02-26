@@ -1,7 +1,6 @@
 package com.raswanth.cartmicroservice.controller;
 
 import com.raswanth.cartmicroservice.dto.UpdateCartDto;
-import com.raswanth.cartmicroservice.dto.DeletecartItem;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.service.CartService;
 import jakarta.validation.Valid;
@@ -33,9 +32,4 @@ public class CartController {
         return cartService.viewCart(signedInUser);
     }
 
-    @DeleteMapping("/delete-item")
-    public ResponseEntity<String> deleteCartItem(@Valid @RequestBody DeletecartItem deleteCartItemDTO) {
-        cartService.deleteCartItem(deleteCartItemDTO);
-        return ResponseEntity.ok("Deleted successfully!");
-    }
 }
