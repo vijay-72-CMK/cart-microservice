@@ -1,6 +1,6 @@
 package com.raswanth.cartmicroservice.service;
 
-import com.raswanth.cartmicroservice.dto.UpdateCartDto;
+import com.raswanth.cartmicroservice.dto.CartItemAdjustmentDto;
 import com.raswanth.cartmicroservice.dto.ProductDto;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.entity.CartItem;
@@ -17,35 +17,40 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 
 @Service
-@Transactional
 public class CartService {
 
     private final CartRepository cartRepository;
-    private final WebClient productWebClient;
+    private final WebClient webClient;
     private final CartItemRepository cartItemRepository;
 
 
-    public CartService(CartRepository cartRepository, WebClient productWebClient, CartItemRepository cartItemRepository) {
+    public CartService(CartRepository cartRepository, WebClient.Builder webClientBuilder, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
-        this.productWebClient = productWebClient;
         this.cartItemRepository = cartItemRepository;
+        this.webClient = webClientBuilder.baseUrl("http://localhost:8081/api/products").build();
     }
 
-    public void updateCart(UpdateCartDto updateCartDto, Principal signedInUser) {
+    @Transactional
+    public void updateCart(CartItemAdjustmentDto cartItemAdjustmentDto, Principal signedInUser) {
         try {
+            Integer requestedQuantity = cartItemAdjustmentDto.getQuantity();
+
+            if (requestedQuantity == 0) {
+                throw new GeneralInternalException("Cannot add or remove zero items",
+                        HttpStatus.BAD_REQUEST);
+            }
             Integer userID = Integer.valueOf(signedInUser.getName());
-            ProductDto product = productWebClient
-                    .get().uri("/get-quantity/{productId}", updateCartDto.getProductId())
+            ProductDto product = webClient
+                    .get().uri("/get-quantity/{productId}", cartItemAdjustmentDto.getProductId())
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, error ->
                             Mono.error(new GeneralInternalException("Invalid product Id", HttpStatus.BAD_REQUEST)))
                     .onStatus(HttpStatusCode::is5xxServerError, error ->
-                            Mono.error(new GeneralInternalException("Something went wrong in database when retreiving quantity, try again")))
+                            Mono.error(new GeneralInternalException("Something went wrong in database when retrieving quantity, try again")))
                     .bodyToMono(ProductDto.class)
                     .block();
 
@@ -54,42 +59,43 @@ public class CartService {
             }
 
             int availableQuantity = product.getAvailableQuantity();
-            Integer updatedQuantity = updateCartDto.getUpdatedQuantity();
-            if (availableQuantity < updatedQuantity) {
-                throw new GeneralInternalException("Updated quantity cannot be greater than " + availableQuantity, HttpStatus.BAD_REQUEST);
+            if (requestedQuantity > 0 && availableQuantity < requestedQuantity) {
+                throw new GeneralInternalException("Cannot add as max quantity available is " + availableQuantity, HttpStatus.BAD_REQUEST);
             }
+
 
             Cart cart = cartRepository.findByUserId(userID)
                     .orElseGet(() -> createNewCart(userID));
 
             Optional<CartItem> existingCartItem = cartItemRepository.
-                    findByuserIdAndproductId(userID, updateCartDto.getProductId());
+                    findByuserIdAndproductId(userID, cartItemAdjustmentDto.getProductId());
 
 
             if (existingCartItem.isPresent()) {
                 CartItem curCartItem = existingCartItem.get();
-                if (Objects.equals(curCartItem.getQuantity(), updatedQuantity)) {
-                    throw new GeneralInternalException("Updated quantity and previous quantity are same in update cart",
-                            HttpStatus.BAD_REQUEST);
+                int newQuantity = curCartItem.getQuantity() + requestedQuantity;
+                if (newQuantity < 0) {
+                    throw new GeneralInternalException("Cannot remove more items than what exists in the cart" + curCartItem.getQuantity(), HttpStatus.BAD_REQUEST);
                 }
-                curCartItem.setQuantity(updatedQuantity);
-                if (updatedQuantity == 0) {
+                if (newQuantity > availableQuantity) {
+                    throw new GeneralInternalException("Not enough stock. Maximum available quantity is " + availableQuantity, HttpStatus.BAD_REQUEST);
+                }
+                if (newQuantity == 0) {
                     cartItemRepository.deleteById(curCartItem.getId());
                 } else {
-                    curCartItem.setQuantity(updatedQuantity);
+                    curCartItem.setQuantity(newQuantity);
+                    cartItemRepository.save(curCartItem);
                 }
             } else {
-                if (updatedQuantity == 0) {
-                    throw new GeneralInternalException("Cannot add product with id " + updateCartDto.getProductId() +
-                            " to cart whose quantity is zero", HttpStatus.BAD_REQUEST);
+                if (requestedQuantity < 0) {
+                    throw new GeneralInternalException("Cannot remove product that does not exist in cart", HttpStatus.BAD_REQUEST);
                 }
-                CartItem cartItem = new CartItem();
-                cartItem.setQuantity(updatedQuantity);
-                cartItem.setProductId(updateCartDto.getProductId());
-                cart.getCartItems().add(cartItem);
+                CartItem newCartItem = new CartItem();
+                newCartItem.setProductId(cartItemAdjustmentDto.getProductId());
+                newCartItem.setQuantity(requestedQuantity);
+                cart.getCartItems().add(newCartItem);
             }
             cartRepository.save(cart);
-
         } catch (DataAccessException ex) {
             throw new GeneralInternalException("Database error while adding to cart");
         }

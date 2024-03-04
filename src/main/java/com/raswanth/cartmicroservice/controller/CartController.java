@@ -1,6 +1,6 @@
 package com.raswanth.cartmicroservice.controller;
 
-import com.raswanth.cartmicroservice.dto.UpdateCartDto;
+import com.raswanth.cartmicroservice.dto.CartItemAdjustmentDto;
 import com.raswanth.cartmicroservice.entity.Cart;
 import com.raswanth.cartmicroservice.service.CartService;
 import jakarta.validation.Valid;
@@ -21,10 +21,10 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @PostMapping("/update-cart")
-    public ResponseEntity<String> updateCart(@Valid @RequestBody UpdateCartDto updateCartDto, Principal principal) {
-        cartService.updateCart(updateCartDto, principal);
-        return ResponseEntity.ok("Updated cart successfully!");
+    @PostMapping("/modify-cart")
+    public ResponseEntity<String> modifyCart(@Valid @RequestBody CartItemAdjustmentDto cartItemAdjustmentDto, Principal principal) {
+        cartService.updateCart(cartItemAdjustmentDto, principal);
+        return ResponseEntity.ok("Modified cart successfully!");
     }
 
     @GetMapping("/view-cart")
