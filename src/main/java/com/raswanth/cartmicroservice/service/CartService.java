@@ -11,6 +11,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -119,6 +121,16 @@ public class CartService {
                     .orElseGet(() -> createNewCart(userId));
         } catch (DataAccessException e) {
             throw new GeneralInternalException("Database error while viewing cart");
+        }
+    }
+
+    @Transactional
+    public void deleteCart(Principal signedInUser) {
+        try {
+            Integer userId = Integer.valueOf(signedInUser.getName());
+            cartRepository.deleteByUserId(userId);
+        } catch (DataAccessException e) {
+            throw new GeneralInternalException("Database error while deleting cart");
         }
     }
 }

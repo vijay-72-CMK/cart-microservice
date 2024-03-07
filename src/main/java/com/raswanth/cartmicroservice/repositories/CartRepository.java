@@ -11,4 +11,5 @@ import java.util.logging.Logger;
 public interface CartRepository extends JpaRepository<Cart, Integer> {
     Optional<Cart> findByUserId(Integer userId);
 
+    void deleteByUserId(Integer userId);
 }

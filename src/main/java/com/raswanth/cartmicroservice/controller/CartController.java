@@ -32,4 +32,10 @@ public class CartController {
         return cartService.viewCart(signedInUser);
     }
 
+    @DeleteMapping("/delete-cart")
+    public ResponseEntity<String> deleteCart(Principal principal) {
+        cartService.deleteCart(principal);
+        return ResponseEntity.ok("Deleted cart successfully!");
+    }
+
 }
